@@ -6,11 +6,41 @@ require 'puppet/util/retryaction'
 
 class Puppet::Node::Facts::InventoryActiveRecord < Puppet::Indirector::ActiveRecord
   def find(request)
-    node = Puppet::Rails::InventoryNode.find_by_name(request.key)
-    return nil unless node
-    facts = Puppet::Node::Facts.new(node.name, node.facts_to_hash)
-    facts.timestamp = node.timestamp
-    facts
+    key = request.options[:key] || 'node'
+
+    case key
+    when 'fact'
+      retrieve_fact_values request.key
+    when 'node'
+      retrieve_node_facts  request.key
+    else
+      nil
+    end
+  end
+
+  def retrieve_fact_values(fact)
+    facts = Puppet::Rails::InventoryFact.find_all_by_name(fact)
+
+    values_hash = Hash.new
+    facts.each do |fact|
+      unless values_hash.has_key? fact.value
+        values_hash[fact.value] = Array.new
+      end
+
+      values_hash[fact.value] << Puppet::Rails::InventoryNode.find_by_id(fact.node_id).name
+    end
+
+    values_hash
+  end
+
+  def retrieve_node_facts(node_name)
+    if node = Puppet::Rails::InventoryNode.find_by_name(node_name)
+      facts = Puppet::Node::Facts.new(node.name, node.facts_to_hash)
+      facts.timestamp = node.timestamp
+      facts
+    else
+      nil
+    end
   end
 
   def save(request)

@@ -22,6 +22,10 @@ describe Puppet::Type.type(:package) do
     Puppet::Type.type(:package).provider_feature(:purgeable).methods.should == [:purge]
   end
 
+  it "should have a :dependencies feature that requires the :dependencies method" do
+    Puppet::Type.type(:package).provider_feature(:dependencies).methods.should == [:dependencies]
+  end
+
   it "should have a :versionable feature" do
     Puppet::Type.type(:package).provider_feature(:versionable).should_not be_nil
   end
@@ -99,6 +103,14 @@ describe Puppet::Type.type(:package) do
 
     it "should accept any string as an argument to :source" do
       proc { Puppet::Type.type(:package).new(:name => "yay", :source => "stuff") }.should_not raise_error(Puppet::Error)
+    end
+
+    it "should prevent the user from trying to set the dependencies" do
+      @provider.expects(:satisfies?).with([:dependencies]).returns(true)
+      resource = Puppet::Type.type(:package).new({:name => 'foo'})
+      lambda {
+        resource[:dependencies] = ['bar','baz']
+      }.should raise_error(Puppet::Error, /dependencies is read-only/)
     end
   end
 

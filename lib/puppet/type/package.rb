@@ -50,6 +50,8 @@ module Puppet
       passed to the installer command."
     feature :uninstall_options, "The provider accepts options to be
       passed to the uninstaller command."
+    feature :dependencies, "The provider provides the dependencies property",
+      :methods => [:dependencies]
 
     ensurable do
       desc <<-EOT
@@ -342,6 +344,14 @@ module Puppet
         strings _must_ be double-escaped and backslashes in single-quoted
         strings _may_ be double-escaped.
       EOT
+    end
+
+    newproperty(:dependencies, :required_features => :dependencies) do
+      desc "Read-only property that displays immediate dependencies for a package"
+
+      validate do |val|
+        fail 'dependencies is read-only'
+      end
     end
 
     autorequire(:file) do

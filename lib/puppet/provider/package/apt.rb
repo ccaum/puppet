@@ -5,6 +5,7 @@ Puppet::Type.type(:package).provide :apt, :parent => :dpkg, :source => :dpkg do
   desc "Package management via `apt-get`."
 
   has_feature :versionable
+  has_feature :description
 
   commands :aptget => "/usr/bin/apt-get"
   commands :aptcache => "/usr/bin/apt-cache"
@@ -34,6 +35,14 @@ Puppet::Type.type(:package).provide :apt, :parent => :dpkg, :source => :dpkg do
       raise Puppet::Error,
         "/etc/apt/sources.list contains a cdrom source; not installing.  Use 'allowcdrom' to override this failure."
     end
+  end
+
+  def description
+    output = aptcache :show, @resource[:name]
+
+    package = output.split(/^\s*$/).find { |pkg| pkg.grep(/Version.*#{@resource[:version]}/) }
+    package = output.split(/^\s*$/).find { |pkg| pkg =~ /Version.*#{@resource[:version]}/ }
+    description = package.split(/^[A-z]/).find { |attr| attr =~ /^escription-en/ }.split(':').last.strip
   end
 
   # Install a package using 'apt-get'.  This function needs to support

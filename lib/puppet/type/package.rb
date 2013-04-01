@@ -50,6 +50,8 @@ module Puppet
       passed to the installer command."
     feature :uninstall_options, "The provider accepts options to be
       passed to the uninstaller command."
+    feature :descriptions, "The provider can return the description for a
+      package resource."
 
     ensurable do
       desc <<-EOT
@@ -342,6 +344,14 @@ module Puppet
         strings _must_ be double-escaped and backslashes in single-quoted
         strings _may_ be double-escaped.
       EOT
+    end
+
+    newproperty(:description, :required_features => :description) do
+      desc 'Read-only property that displays the description for a package'
+
+      validate do |val|
+        fail 'description is read-only'
+      end
     end
 
     autorequire(:file) do
